@@ -1,0 +1,1 @@
+-wto "5a9eb032fc2c4a8f9a8fdebf613c3fd5" --incr --debug "typical" --relax --mt "2" -L "xil_defaultlib" -L "unisims_ver" -L "unimacro_ver" -L "secureip" --snapshot "soccer_behav" "xil_defaultlib.soccer" "xil_defaultlib.glbl" -log "elaborate.log" 
