@@ -1,0 +1,1058 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SUFE矩阵计算器</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            height: 100vh;
+            width: 100%;
+            background-image: url('https://klog.co/hubfs/templo-sanfeng%20%281%29.jpg')   !important;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat; /* 图片不重复 */
+        }
+
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 20%;
+            background-color: rgba(44, 62, 80, 0.8);
+            color: white;
+            padding: 15px;
+            box-sizing: border-box;
+            overflow: auto;
+        }
+        .sidebar h2 {
+            text-align: center;
+            font-size: 20px;
+        }
+        .sidebar ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        .sidebar ul li {
+            margin: 15px 0;
+        }
+        .sidebar ul li button {
+            width: 100%;
+            padding: 10px;
+            background-color: #34495e;
+            color: white;
+            border: none;
+            cursor: pointer;
+            text-align: left;
+        }
+        .sidebar ul li button:hover {
+            background-color: #1abc9c;
+        }
+        /* 选中状态的按钮样式 */
+        .sidebar ul li button.active {
+            background-color: #e74c3c; /* 改变背景颜色，例如红色 */
+            color: white; /* 确保文字颜色保持一致 */
+        }
+
+        .content {
+            margin-left: 20%;
+            padding: 20px;
+            width: 80%;
+            background-color: rgba(255, 255, 255, 0.8);
+            box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+        }
+        .content h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .input-section {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+            align-items: flex-start;
+        }
+
+        .matrix-input-container {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            align-items: center;
+        }
+
+        .matrix-input-container h3 {
+            margin-bottom: 10px;
+            text-align: center; /* 将标题居中 */
+            width: 100%; /* 确保标题占满容器的宽度以居中显示 */
+        }
+
+        /* 统一的矩阵输入样式 */
+       /* 统一的矩阵输入样式 */
+        .matrix-input {
+            margin:0 auto;
+            display: grid;
+            row-gap: 10px; 
+            column-gap: 15px;
+            grid-template-columns: repeat(auto-fill, minmax(50px, 1fr)); /* 保持每个输入框最小50px */
+            justify-content: center;
+        }
+
+        .matrix-input input {
+            width: 60px; /* 扩大输入框宽度 */
+            height: 40px; /* 增加高度，确保不会重叠 */
+            padding: 10px;
+            text-align: center;
+            font-size: 16px;
+            border: 1px solid #ccc; /* 给每个输入框一个边框，确保视觉上的分隔 */
+            box-sizing: border-box; /* 确保内边距和边框不影响输入框的大小 */
+        }
+
+
+
+        .constant-input {
+            margin: 20px 0;
+            text-align: center;
+            display: none;
+        }
+
+        .result {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .matrix-controls {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            margin-top: 10px;
+            text-align: center;
+        }
+        .matrix-controls button {
+            padding: 10px 20px;
+            margin: 5px;
+            background-color: #34495e;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        .matrix-controls button:hover {
+            background-color: #1abc9c;
+        }
+        .matrix-controls:last-child {
+            margin-top: auto;
+        }
+        .matrix-input-container .matrix-controls {
+            margin-bottom: 20px;
+            min-height: 50px;
+        }
+
+        .matrix-display {
+            display: grid;
+            gap: 5px;
+            margin: 10px 0;
+            grid-template-columns: repeat(auto-fill, 50px);
+        }
+        .matrix-display div {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 10px;
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <h2>选择功能</h2>
+        <ul>
+            <li><button onclick="selectFunction('add')">矩阵加法 A+B</button></li>
+            <li><button onclick="selectFunction('subtract')">矩阵减法 A-B</button></li>
+            <li><button onclick="selectFunction('multiply')">矩阵乘法 AxB</button></li>
+            <li><button onclick="selectFunction('solve_AX_B')">AX = B 求解 X</button></li>
+            <li><button onclick="selectFunction('solve_XA_B')">XA = B 求解 X</button></li>
+            <li><button onclick="selectFunction('transpose')">转置矩阵</button></li>
+            <li><button onclick="selectFunction('rank')">矩阵的秩</button></li>
+            <li><button onclick="selectFunction('scalar')">矩阵与常数乘积</button></li>
+            <li><button onclick="selectFunction('power')">矩阵的幂</button></li>
+            <li><button onclick="selectFunction('determinant')">矩阵求行列式</button></li>
+            <li><button onclick="selectFunction('inverse')">逆矩阵</button></li>
+            <li><button onclick="selectFunction('lu')">LU分解</button></li>
+        </ul>
+    </div>
+
+    <div class="content">
+        <h1>SUFE矩阵计算器</h1>
+
+        <div class="input-section">
+            <div class="matrix-input-container">
+                <h3>矩阵 A</h3>
+                <div class="matrix-input" id="matrixA-input">
+                    <!-- 矩阵 A 的输入区域 -->
+                </div>
+                <div class="matrix-controls">
+                    <button onclick="addRow('A')">A矩阵增加行</button>
+                    <button onclick="addCol('A')">A矩阵增加列</button>
+                    <button onclick="removeRow('A')">A矩阵删除行</button>
+                    <button onclick="removeCol('A')">A矩阵删除列</button>
+                </div>
+                <!-- 插入按钮 -->
+                <div class="matrix-controls">
+                    <button onclick="insertMatrixA('A')">插入 A</button>
+                    <button onclick="insertMatrixB('A')">插入 B</button>
+                    <button onclick="insertMatrixANS('A')">插入 ANS</button>
+                </div>
+            </div>
+
+            <div class="matrix-input-container" id="matrixB-container">
+                <h3>矩阵 B</h3>
+                <div class="matrix-input" id="matrixB-input">
+                    <!-- 矩阵 B 的输入区域 -->
+                </div>
+                <div class="matrix-controls">
+                    <button onclick="addRow('B')">B矩阵增加行</button>
+                    <button onclick="addCol('B')">B矩阵增加列</button>
+                    <button onclick="removeRow('B')">B矩阵删除行</button>
+                    <button onclick="removeCol('B')">B矩阵删除列</button>
+                </div>
+                <!-- 插入按钮 -->
+                <div class="matrix-controls">
+                    <button onclick="insertMatrixA('B')">插入 A</button>
+                    <button onclick="insertMatrixB('B')">插入 B</button>
+                    <button onclick="insertMatrixANS('B')">插入 ANS</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 常数输入区域 -->
+        <div class="constant-input" id="constant-input">
+            <label for="constant-value">输入常数：</label>
+            <input type="number" id="constant-value" placeholder="请输入常数或幂次">
+        </div>
+
+        <div class="matrix-controls">
+            <button onclick="clearMatrices()">清空矩阵</button>
+            <button onclick="restoreHistory()">恢复历史记录</button> <!-- 新增按钮 -->
+        </div>
+
+        <div class="matrix-controls">
+            <button id="calculate-btn" onclick="calculate()">计算</button>
+        </div>
+
+        <div class="result" id="result">
+            计算结果及过程将在这里显示
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/fraction.js"></script>
+
+    <script>
+        let rowsA = 3;
+        let colsA = 3;
+        let rowsB = 3;
+        let colsB = 3;
+        let matrixA = Array.from({ length: rowsA }, () => Array(colsA).fill(0));
+        let matrixB = Array.from({ length: rowsB }, () => Array(colsB).fill(0));
+        let operation = '';
+        let previousMatrixA = []; // 保存上一次矩阵 A 的值
+        let previousMatrixB = []; // 保存上一次矩阵 B 的值
+        let ANS = null; // 上一次的计算结果
+
+        // 初始化矩阵输入区域，并保留已有输入的数据
+        function initMatrixInputs(matrixId) {
+            const matrixInput = document.getElementById(matrixId === 'A' ? 'matrixA-input' : 'matrixB-input');
+            const matrix = matrixId === 'A' ? matrixA : matrixB;
+            const rows = matrixId === 'A' ? rowsA : rowsB;
+            const cols = matrixId === 'A' ? colsA : colsB;
+            
+            matrixInput.innerHTML = '';
+
+            matrixInput.style.gridTemplateColumns = `repeat(${cols}, 50px)`; // 确保列间隔一致
+
+            for (let i = 0; i < rows; i++) {
+                for (let j = 0; j < cols; j++) {
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.value = (matrix[i][j] instanceof Fraction) ? matrix[i][j].toFraction() : matrix[i][j];// 不设置初始 value，这样输入框保持空白
+                    input.setAttribute('data-row', i);
+                    input.setAttribute('data-col', j);
+                    input.addEventListener('input', function () {
+                        // 将输入框内容设为数字，如果为空则设为 0
+                        const value = input.value;
+                        matrix[i][j] = parseFraction(value) || 0;
+                    });
+                    matrixInput.appendChild(input);
+                }
+            }
+        }
+        function parseFraction(value) {
+            // 尝试将输入值解析为 Fraction
+            if (value) {
+                const parts = value.split('/');
+                if (parts.length === 2) {
+                    const numerator = parseFloat(parts[0]);
+                    const denominator = parseFloat(parts[1]);
+                    if (!isNaN(numerator) && !isNaN(denominator) && denominator !== 0) {
+                        return new Fraction(numerator, denominator); // 返回 Fraction 实例
+                    }
+                } else {
+                    const number = parseFloat(value);
+                    if (!isNaN(number)) {
+                        return new Fraction(number); // 返回单个数字的 Fraction 实例
+                    }
+                }
+            }
+            return null; // 如果无法解析，则返回 null
+        }
+
+        function switchToTwoMartixOperations() {
+            if (!matrixB || matrixB.length === 0) {
+                matrixB = [[0]];
+            }
+
+            initMatrixInputs('A');
+            initMatrixInputs('B');
+        }
+
+        function switchToSingleMartixOperations() {
+            initMatrixInputs('A');
+            document.getElementById('matrixB-container').style.display = 'none';
+        }
+
+        // function insertMatrixA(targetMatrix) {
+        //     if (targetMatrix === 'A') {
+        //         //matrixA = matrixA.map(row => [...row]); // 重新赋值 A
+        //         matrixA = matrixA.map(row => row.map(value => value.toFraction ? value.toFraction() : value)); 
+        //     } else if (targetMatrix === 'B') {
+        //         //matrixB = matrixA.map(row => [...row]); // 用矩阵 A 替换 B
+        //         matrixB = matrixA.map(row => row.map(value => value.toFraction ? value.toFraction() : value));
+        //     }
+        //     initMatrixInputs(targetMatrix); // 重新渲染目标矩阵
+        // }
+
+        // function insertMatrixB(targetMatrix) {
+        //     if (targetMatrix === 'A') {
+        //         matrixA = matrixB.map(row => row.map(value => value.toFraction ? value.toFraction() : value)); // 用矩阵 B 替换 A
+        //     } else if (targetMatrix === 'B') {
+        //         matrixB = matrixB.map(row => row.map(value => value.toFraction ? value.toFraction() : value)); // 重新赋值 B
+        //     }
+        //     initMatrixInputs(targetMatrix); // 重新渲染目标矩阵
+        // }
+
+        // function insertANS(targetMatrix) {
+        //     if (ANS !== null) {
+        //         //const matrixToInsert = Array.isArray(ANS) ? ANS : [[ANS]]; // 处理 ANS 是矩阵或数值
+        //         const matrixToInsert = Array.isArray(ANS) 
+        //             ? ANS.map(row => row.map(value => value.toFraction ? value.toFraction() : value))
+        //             : [[ANS.toFraction ? ANS.toFraction() : ANS]];
+        //         if (targetMatrix === 'A') {
+        //             matrixA = matrixToInsert.map(row => [...row]); // 用 ANS 替换 A
+        //         } else if (targetMatrix === 'B') {
+        //             matrixB = matrixToInsert.map(row => [...row]); // 用 ANS 替换 B
+        //         }
+        //         initMatrixInputs(targetMatrix); // 重新渲染目标矩阵
+        //     } else {
+        //         alert('没有可插入的计算结果（ANS）。');
+        //     }
+        // }
+
+        // function insertIntoInputField(matrix) {
+        //     const operationInput = document.getElementById('operation-input'); // 假设这是用于输入操作的输入框
+        //     let matrixString;
+
+        //     if (Array.isArray(matrix)) {
+        //         // 如果是矩阵，格式化为字符串
+        //         matrixString = matrix.map(row => row.join(', ')).join('\n'); // 行与行之间换行
+        //     } else {
+        //         // 如果是 ANS，直接使用
+        //         matrixString = matrix;
+        //     }
+
+        //     // 插入到操作输入框中
+        //     operationInput.value += matrixString + '\n'; // 每次插入后换行
+        // }
+
+        // 插入矩阵 A 或 B 并调整大小
+        function insertMatrix(targetMatrix, sourceMatrix) {
+            // 将目标矩阵调整为与源矩阵相同的大小
+            if (targetMatrix === 'A') {
+                matrixA = sourceMatrix.map(row => row.map(value => value.toFraction ? value.toFraction() : value)); // 深拷贝源矩阵
+                rowsA = sourceMatrix.length;  // 更新行数
+                colsA = sourceMatrix[0].length;  // 更新列数
+            } else if (targetMatrix === 'B') {
+                matrixB = sourceMatrix.map(row => row.map(value => value.toFraction ? value.toFraction() : value)); // 深拷贝源矩阵
+                rowsB = sourceMatrix.length;  // 更新行数
+                colsB = sourceMatrix[0].length;  // 更新列数
+            }
+
+            initMatrixInputs(targetMatrix); // 重新渲染目标矩阵
+        }
+
+        // 插入 B 
+        function insertMatrixB(targetMatrix) {
+            insertMatrix(targetMatrix, matrixB); // 插入矩阵 B 
+        }
+        // 插入 A 
+        function insertMatrixA(targetMatrix) {
+            insertMatrix(targetMatrix, matrixA); // 插入矩阵 A 
+        }
+        // 插入 ANS 
+        function insertMatrixANS(targetMatrix) {
+            if (ANS && Array.isArray(ANS)) {
+                const matrixToInsert = ANS.map(row => row.map(value => value.toFraction ? value.toFraction() : value));
+                insertMatrix(targetMatrix, matrixToInsert); // 插入 ANS
+            } else {
+                alert('没有可插入的计算结果（ANS）。');
+            }
+        }
+
+        function restoreHistory() {
+            if (previousMatrixA.length > 0 && previousMatrixB.length > 0) {
+                matrixA = previousMatrixA.map(row => [...row]);  // 恢复 A 矩阵
+                matrixB = previousMatrixB.map(row => [...row]);  // 恢复 B 矩阵
+                initMatrixInputs('A');  // 重新渲染 A 矩阵输入区域
+                initMatrixInputs('B');  // 重新渲染 B 矩阵输入区域
+            } else {
+                alert('没有可恢复的历史记录！');
+            }
+        }
+
+        // 增加行和列
+        function addRow(matrixId) {
+            if (matrixId === 'A') {
+                rowsA++;
+                matrixA.push(Array(colsA).fill(0));
+                initMatrixInputs('A');
+            } else {
+                rowsB++;
+                matrixB.push(Array(colsB).fill(0));
+                initMatrixInputs('B');
+            }
+        }
+
+        function addCol(matrixId) {
+            if (matrixId === 'A') {
+                colsA++;
+                matrixA.forEach(row => row.push(0));
+                initMatrixInputs('A');
+            } else {
+                colsB++;
+                matrixB.forEach(row => row.push(0));
+                initMatrixInputs('B');
+            }
+        }
+
+        // 删除行和列
+        function removeRow(matrixId) {
+            if (matrixId === 'A' && rowsA > 1) {
+                rowsA--;
+                matrixA.pop();
+                initMatrixInputs('A');
+            } else if (matrixId === 'B' && rowsB > 1) {
+                rowsB--;
+                matrixB.pop();
+                initMatrixInputs('B');
+            }
+        }
+
+        function removeCol(matrixId) {
+            if (matrixId === 'A' && colsA > 1) {
+                colsA--;
+                matrixA.forEach(row => row.pop());
+                initMatrixInputs('A');
+            } else if (matrixId === 'B' && colsB > 1) {
+                colsB--;
+                matrixB.forEach(row => row.pop());
+                initMatrixInputs('B');
+            }
+        }
+
+        function clearMatrices() {
+            matrixA = Array.from({ length: rowsA }, () => Array(colsA).fill(0));
+            matrixB = Array.from({ length: rowsB }, () => Array(colsB).fill(0));
+            initMatrixInputs('A');
+            initMatrixInputs('B');
+            // 不修改 previousMatrixA 和 previousMatrixB，历史记录依然存在
+        }
+
+        // 计算函数
+        function calculate() {
+            // 计算前保存历史记录
+            previousMatrixA = matrixA.map(row => [...row]); // 保存当前 A 矩阵
+            previousMatrixB = matrixB.map(row => [...row]); // 保存当前 B 矩阵
+
+            console.log("Calculating with operation:", operation);
+
+            // 不再重新声明 matrixA 和 matrixB，直接使用全局的 matrixA 和 matrixB
+            matrixA = getMatrix('matrixA-input');
+            matrixB = getMatrix('matrixB-input');
+
+            console.log("Matrix A:", matrixA);
+            console.log("Matrix B:", matrixB);
+
+            let result;
+            let process = '';
+
+            switch (operation) {
+                case 'add':
+                    ({ result, process } = matrixAdd(matrixA, matrixB));
+                    break;
+                case 'subtract':
+                    ({ result, process } = matrixSubtract(matrixA, matrixB));
+                    break;
+                case 'multiply':
+                    ({ result, process } = matrixMultiply(matrixA, matrixB));
+                    break;
+                case 'solve_AX_B':
+                    ({ result, process } = solveAXB(matrixA, matrixB));
+                    break;
+                case 'solve_XA_B':
+                    ({ result, process } = solveXAB(matrixA, matrixB));
+                    break;
+                case 'transpose':
+                    ({ result, process } = matrixTranspose(matrixA));
+                    break;
+                case 'inverse':
+                    ({ result, process } = matrixInverse(matrixA));
+                    break;
+                case 'determinant':
+                    ({ result, process } = matrixDeterminant(matrixA));
+                    break;
+                case 'rank':
+                    ({ result, process } = matrixRank(matrixA));
+                    break;
+                case 'lu':
+                    ({ result, process } = matrixLU(matrixA));
+                    displayLUResult(result);
+                    return; // 跳过标准结果显示
+                case 'scalar':
+                    const scalar = parseFloat(document.getElementById('constant-value').value);
+                    if (isNaN(scalar)) {
+                        alert('请输入一个有效的常数');
+                        return;
+                    }
+                    ({ result, process } = matrixScalarMultiply(matrixA, scalar));
+                    break;
+                case 'power':
+                    const power = parseInt(document.getElementById('constant-value').value);
+                    if (isNaN(power)) {
+                        alert('请输入一个有效的幂次');
+                        return;
+                    }
+                    ({ result, process } = matrixPower(matrixA, power));
+                    break;
+            }
+            //ANS = result;
+            ANS = Array.isArray(result) 
+                ? result.map(row => row.map(value => value instanceof Fraction ? value : new Fraction(value))) 
+                : (result instanceof Fraction ? result : new Fraction(result));
+            displayResult(result, process);
+        }
+
+        // 矩阵功能函数
+        function checkDimensions(A, B) {
+            if (A.length !== B.length || A.some((row, i) => row.length !== B[i].length)) {
+                //throw new Error('矩阵 A 和矩阵 B 的维度不匹配，无法进行运算。');
+                return { result: null, process: '矩阵 A 和矩阵 B 的维度不匹配，无法进行运算!' };
+            }
+        }
+        function matrixAdd(A, B) {
+            checkDimensions(A,B);
+
+            const result = [];
+            let process = '计算矩阵加法的过程:\n'; // 初始化过程描述
+            for (let i = 0; i < A.length; i++) {
+                const row = [];
+                for (let j = 0; j < A[i].length; j++) {
+                    //const sum = A[i][j] + B[i][j];
+                    const sum = new Fraction(A[i][j]).add(new Fraction(B[i][j])).toFraction();
+                    row.push(sum);
+                    process += `A[${i}][${j}] (${A[i][j]}) + B[${i}][${j}] (${B[i][j]}) = ${sum}\n`;
+                }
+                result.push(row);
+            }
+            process += `结果矩阵:\n${result.map(row => row.join('\t')).join('\n')}`; // 添加结果矩阵到过程
+            return { result, process };
+        }
+
+        function matrixSubtract(A, B) {
+            checkDimensions(A,B);
+
+            const result = [];
+            let process = '计算矩阵减法的过程:\n'; // 初始化过程描述
+            for (let i = 0; i < A.length; i++) {
+                const row = [];
+                for (let j = 0; j < A[i].length; j++) {
+                    //const diff = A[i][j] - B[i][j];
+                    const diff = new Fraction(A[i][j]).sub(new Fraction(B[i][j])).toFraction();
+                    row.push(diff);
+                    process += `A[${i}][${j}] (${A[i][j]}) - B[${i}][${j}] (${B[i][j]}) = ${diff}\n`;
+                }
+                result.push(row);
+            }
+            process += `结果矩阵:\n${result.map(row => row.join('\t')).join('\n')}`; // 添加结果矩阵到过程
+            return { result, process };
+        }
+
+        function matrixMultiply(A, B) {
+            // 检查矩阵 A 的列数是否与矩阵 B 的行数相等
+            if (A[0].length !== B.length) {
+                console.error('矩阵 A 的列数与矩阵 B 的行数不匹配，无法进行乘法。');
+                return { result: null, process: '矩阵 A 的列数与矩阵 B 的行数不匹配，无法进行乘法。' };
+            }
+
+            const result = [];
+            let process = '';
+
+            for (let i = 0; i < A.length; i++) {
+                result[i] = [];
+                for (let j = 0; j < B[0].length; j++) {
+                    let sum = new Fraction(0);
+                    process += `计算 result[${i}][${j}] 的过程:\n`; // 每个结果的新过程
+                    for (let k = 0; k < A[0].length; k++) {
+                        //const product = A[i][k] * B[k][j];
+                        const product = new Fraction(A[i][k]).mul(new Fraction(B[k][j]));
+                        sum = sum.add(product);
+                        
+                        // 使用正确的模板字符串
+                        process += `A[${i}][${k}] (${A[i][k]}) * B[${k}][${j}] (${B[k][j]}) = ${product}\n`;
+                    }
+                    //result[i][j] = sum;
+                    result[i][j] = sum.toFraction();
+                    process += `Sum for result[${i}][${j}] = ${sum}\n`; // 计算总和
+                }
+            }
+
+            console.log("Matrix multiplication result:", result);
+            return { result, process };
+        }
+
+        function solveAXB(A, B) {
+            if (A.length !== A[0].length || A.length !== B.length) {
+                return { result: null, process: 'AX = B 无法求解，因为矩阵 A 不是方阵或 B 的维度与 A 不匹配。' };
+            }
+
+            const { result: inverseA, process: inverseProcess } = matrixInverse(A);
+            
+            if (!inverseA) {
+                return { result: null, process: 'A 矩阵不可逆，无法求解 AX = B' };
+            }
+
+            const { result, process: multiplicationProcess } = matrixMultiply(inverseA, B); // X = A^-1 * B
+            
+            // 添加调试信息，检查 result 是否为数组
+            console.log("Matrix multiplication result:", result);
+
+            // 检查 result 是否为二维数组
+            if (!Array.isArray(result) || !Array.isArray(result[0])) {
+                return { result: null, process: '矩阵乘法结果不是有效的二维数组。' };
+            }
+
+            const process = `${inverseProcess}\n通过 A 的逆矩阵 A^-1 求解 AX = B:\n${multiplicationProcess}\n结果矩阵:\n${result.map(row => row.join('\t')).join('\n')}`;
+            
+            return { result, process };
+        }
+
+        function solveXAB(A, B) {
+            if (A.length !== A[0].length || A[0].length !== B[0].length) {
+                return { result: null, process: 'XA = B 无法求解，因为矩阵 A 不是方阵或 B 的维度与 A 不匹配。' };
+            }
+
+            const { result: inverseA, process: inverseProcess } = matrixInverse(A);
+
+            if (!inverseA) {
+                return { result: null, process: 'A 矩阵不可逆，无法求解 XA = B' };
+            }
+
+            const result = matrixMultiply(B, inverseA); // X = B * A^-1
+            console.log("Result of XA=B:", result);
+            const process = `${inverseProcess}\n通过 A 的逆矩阵 A^-1 求解 XA = B:\nX = B * A^-1\n结果矩阵:\n${result.map(row => row.join('\t')).join('\n')}`;
+            
+            return { result, process };
+        }
+
+        function matrixTranspose(A) {
+            const result = [];
+            let process = '';
+            for (let i = 0; i < A[0].length; i++) {
+                const row = [];
+                for (let j = 0; j < A.length; j++) {
+                    row.push(A[j][i]);
+                    process += `A[${j}][${i}] (${A[j][i]})\n`;
+                }
+                result.push(row);
+            }
+            return { result, process };
+        }
+
+        function matrixInverse(A) {
+            const len = A.length;
+            if (len === 0 || A.some(row => row.length !== len)) {
+                return { result: null, process: '只有方阵才有逆矩阵！' };
+            }
+            const { result: determinant, process: determinantProcess } = matrixDeterminant(A);
+            let process = `矩阵 A 的行列式 det(A) = ${determinant}\n${determinantProcess}\n`;
+
+            if (new Fraction(determinant).equals(0)) {
+                // process += '由于行列式为 0，矩阵 A 不可逆。\n';
+                // return { result: null, process };
+                //throw new Error('由于行列式为 0，该矩阵不可逆！');
+                return { result: null, process: '由于行列式为 0，矩阵 A 不可逆。' };
+            }
+
+            const { result: adjugateMatrix, process: adjugateProcess } = matrixAdjugate(A);
+            process += `伴随矩阵 adj(A):\n${adjugateMatrix.map(row => row.join('\t')).join('\n')}\n${adjugateProcess}\n`;
+
+            const n = A.length;
+            const inverse = Array.from({ length: n }, () => Array(n).fill(0));
+            process += `通过公式 A^-1 = adj(A) / det(A) 计算逆矩阵:\n`;
+
+            for (let i = 0; i < n; i++) {
+                for (let j = 0; j < n; j++) {
+                    //inverse[i][j] = adjugateMatrix[i][j] / determinant;
+                    //inverse[i][j] = new Fraction(adjugateMatrix[i][j],determinant).toFraction();
+                   const numerator = new Fraction(adjugateMatrix[i][j]);
+                   const denominator = new Fraction(determinant);
+
+                   inverse[i][j] = numerator.div(denominator).toFraction();
+                }
+            }
+
+            process += inverse.map(row => row.join('\t')).join('\n') + '\n';
+            return { result: inverse, process };
+        }
+
+        function matrixDeterminant(A) {
+            const n = A.length;
+
+            if (n === 0 || A.some(row => row.length !== n)) {
+                return { result: null, process: '行列式仅适用于方阵！'}
+            }
+
+            if (n === 1) return { result: A[0][0], process: `行列式: ${A[0][0]}` };
+
+            if (n === 2) {
+                const det2x2 = new Fraction(A[0][0]).mul(new Fraction(A[1][1])).sub(new Fraction(A[0][1]).mul(new Fraction(A[1][0])));
+                const process2x2 = `2x2矩阵行列式:\n${A[0][0]} * ${A[1][1]} - ${A[0][1]} * ${A[1][0]} = ${det2x2}\n`;
+                return { result: det2x2, process: process2x2 };
+            }
+
+            let determinant = new Fraction(0);
+            let process = `计算行列式的过程:\n`;
+            for (let col = 0; col < n; col++) {
+                const minor = A.slice(1).map(row => row.filter((_, j) => j !== col)); // 子矩阵
+                const cofactorResult = matrixDeterminant(minor); // 递归计算子矩阵的行列式
+
+                const cofactor = new Fraction(A[0][col]).mul(cofactorResult.result);
+                determinant = (col % 2 === 0 ? determinant.add(cofactor) : determinant.sub(cofactor));
+
+                process += `Cofactor(${col + 1}): A[0][${col}](${A[0][col]}) * 子矩阵行列式(${cofactorResult.result.toFraction()}) = ${cofactor.toFraction()}, 累积结果: ${determinant.toFraction()}\n`;
+                process += cofactorResult.process + '\n'; // 递归过程追加
+            }
+
+            return { result: determinant, process: `行列式: ${determinant.toFraction()}\n` + process };
+        }
+
+        function matrixAdjugate(A) {
+            const n = A.length;
+            const adjugate = Array.from({ length: n }, () => Array(n).fill(0));
+            let process = '计算伴随矩阵的过程（通过余子式计算）:\n';
+
+            for (let i = 0; i < n; i++) {
+                for (let j = 0; j < n; j++) {
+                    const subMatrix = A
+                        .filter((_, row) => row !== i) // 删除第 i 行
+                        .map(row => row.filter((_, col) => col !== j)); // 删除第 j 列
+
+                    const { result: cofactorDet, process: cofactorProcess } = matrixDeterminant(subMatrix);
+                    adjugate[j][i] = new Fraction(((i + j) % 2 === 0 ? 1 : -1)).mul(new Fraction(cofactorDet)); // 代数余子式
+
+                    process += `余子式 A[${i}][${j}] 的行列式: ${cofactorDet}\n`;
+                    process += `子矩阵:\n${subMatrix.map(row => row.join('\t')).join('\n')}\n${cofactorProcess}\n`;
+                }
+            }
+
+            return { result: adjugate, process };
+        }
+
+        function matrixRank(A) {
+            let rows = A.length;
+            let cols = A[0].length;
+            let mat = A.map(row => row.map(value => new Fraction(value))); // 确保矩阵中的元素为 Fraction 对象
+            let rank = 0;
+            let process = '计算矩阵的秩:\n';
+
+            // 逐行处理
+            for (let row = 0; row < rows; row++) {
+                // 找到当前行的主元素（对角线上的元素）
+                let pivotFound = false;
+
+                if (!mat[row][row].equals(0)) {
+                    pivotFound = true;
+                } else {
+                    // 如果当前行的主元素为 0，尝试与下面的行交换，直到找到非零主元素
+                    for (let i = row + 1; i < rows; i++) {
+                        if (!mat[i][row].equals(0)) {
+                            [mat[row], mat[i]] = [mat[i], mat[row]]; // 行交换
+                            process += `交换第 ${row + 1} 行和第 ${i + 1} 行:\n${mat.map(r => r.map(val => val.toFraction()).join('\t')).join('\n')}\n`;
+                            pivotFound = true;
+                            break;
+                        }
+                    }
+                }
+
+                // 如果找到了有效的主元素
+                if (pivotFound) {
+                    rank++; // 每找到一个非零主元素，秩加一
+
+                    // 将主元素下方的所有元素消为 0
+                    for (let i = row + 1; i < rows; i++) {
+                        if (!mat[i][row].equals(0)) {
+                            const ratio = mat[i][row].div(mat[row][row]); // 计算比率
+                            for (let j = row; j < cols; j++) {
+                                mat[i][j] = mat[i][j].sub(ratio.mul(mat[row][j])); // 行减法
+                            }
+                            process += `消元: 将第 ${i + 1} 行减去第 ${row + 1} 行的倍数\n`;
+                            process += `消元后:\n${mat.map(r => r.map(val => val.toFraction()).join('\t')).join('\n')}\n`;
+                        }
+                    }
+                } else {
+                    // 如果主元素为 0 且没有行交换成功，则跳过该行
+                    process += `跳过第 ${row + 1} 行，无法找到非零主元素。\n`;
+                }
+            }
+
+            process += `最终矩阵:\n${mat.map(r => r.map(val => val.toFraction()).join('\t')).join('\n')}\n`;
+            return { result: rank, process };
+        }
+
+        function matrixLU(A) {
+            const n = A.length;
+            
+            //判断是否是方阵
+            if (A.some(row => row.length !== n)) {
+                return { result: null, process: 'LU分解仅适用于方阵！' };
+            }
+
+            const L = Array.from({ length: n }, () => Array(n).fill(0));
+            const U = A.map(row => row.map(value => new Fraction(value))); // 使用 Fraction 处理
+            let process = 'LU分解过程:\n';
+
+            for (let i = 0; i < n; i++) {
+                L[i][i] = new Fraction(1); // 设置 L 的对角线为 1
+
+                //检查主元并进行消元
+                for (let j = i + 1; j < n; j++) {
+                    let pivot = U[i][i];
+                    
+                    // 如果主元为零，尝试行交换
+                    if (pivot.equals(0)) {
+                        for (let k = j; k < n; k++) {
+                            if (!U[k][i].equals(0)) {
+                                // 进行行交换
+                                [U[i], U[k]] = [U[k], U[i]];
+                                process += `行交换: 第 ${i + 1} 行和第 ${k + 1} 行\n`;
+                                pivot = U[i][i]; // 更新主元
+                                break;
+                            }
+                        }
+                        // 如果主元仍然为零，说明矩阵不可逆
+                        if (pivot.equals(0)) {
+                            return { result: null, process: `行 ${i + 1} 的主元为零，无法进行LU分解。` };
+                        }
+                    }
+
+                    const factor = U[j][i].div(pivot); // 使用 Fraction 进行除法
+                    for (let k = 0; k < n; k++) {
+                        U[j][k] = U[j][k].sub(factor.mul(U[i][k])); // 使用 Fraction 进行乘法和减法
+                    }
+                    L[j][i] = factor; // 设置 L 的相应值
+                    process += `L[${j}][${i}] = ${factor.toFraction()}\n`;
+                }
+            }
+
+            process += '\nL矩阵:\n' + L.map(row => row.map(val => (val && typeof val === 'object' && 'toFraction' in val) ? val.toFraction() : val).join('\t')).join('\n') + '\n';
+            process += 'U矩阵:\n' + U.map(row => row.map(val => (val && typeof val === 'object' && 'toFraction' in val) ? val.toFraction() : val).join('\t')).join('\n');
+
+            return { result: { L, U }, process };
+        }
+
+        function matrixScalarMultiply(A, scalar) {
+            const result = [];
+            let process = '';
+            const scalarFraction = new Fraction(scalar);
+
+            for (let i = 0; i < A.length; i++) {
+                const row = [];
+                for (let j = 0; j < A[i].length; j++) {
+                    const product = new Fraction(A[i][j]).mul(scalarFraction);
+                    row.push(product.toFraction());
+                    process += `A[${i}][${j}] (${A[i][j]}) * ${scalar} = ${product.toFraction()}\n`;
+                }
+                result.push(row);
+            }
+            return { result, process };
+        }
+
+        function matrixPower(A, n) {
+            const len = A.length;
+            
+            //判断是否是方阵
+            if (A.some(row => row.length !== len)) {
+                return {result: null, process: '只有方阵才能进行幂运算!'};
+            }
+            //判断幂次是否为正整数
+            if (!Number.isInteger(n) || n < 0) {
+                return {result: null, process: '幂次必须为非负整数!'};
+            }
+            //判断是否为零矩阵
+             const isZeroMatrix = A.every(row => row.every(value => new Fraction(value).equals(0)));
+            //特殊情况：如果是零矩阵并且幂次为零，抛出错误
+            if (isZeroMatrix && n === 0) {
+                return {result: null, process: '零矩阵的零次幂无法计算!'};
+            }
+            //特殊情况：n 为 0 时，返回单位矩阵
+            if (n === 0) {
+                const identityMatrix = Array.from({ length: len }, (_, i) => 
+                    Array.from({ length: len }, (_, j) => (i === j ? new Fraction(1) : new Fraction(0)))
+                );
+                let process = `由于幂次为 0，返回单位矩阵:\n${identityMatrix.map(row => row.map(val => val.toFraction()).join('\t')).join('\n')}\n`;
+                return { result: identityMatrix.map(row => row.map(val => val.toFraction())), process };
+            }
+
+            // 初始化矩阵
+            let result = A.map(row => row.map(value => new Fraction(value)));  // 复制矩阵 A
+            let process = `初始矩阵:\n${result.map(row => row.map(val => val.toFraction()).join('\t')).join('\n')}\n`;
+
+            // 进行矩阵乘方运算
+            for (let i = 1; i < n; i++) {
+                result = matrixMultiply(result, A).result.map(row => row.map(value => new Fraction(value)));  // 重复调用矩阵乘法
+                process += `乘方 ${i + 1} 次后的结果:\n${result.map(row => row.map(val => val.toFraction()).join('\t')).join('\n')}\n`;
+            }
+
+            return { result: result.map(row => row.map(val => val.toFraction())), process: `矩阵的 ${n} 次方:\n` + process };
+        }
+
+        // 显示计算结果
+        function displayResult(result, process) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = `<strong>计算过程：</strong><pre>${process}</pre><strong>结果：</strong>`;
+
+            if (Array.isArray(result)) {
+                const matrixDisplay = displayMatrix(result);
+                resultDiv.appendChild(matrixDisplay);
+            } else {
+                resultDiv.innerHTML += `<pre>${result}</pre>`;
+            }
+        }
+
+        // 显示 LU 分解结果
+        function displayLUResult(result) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '';
+            if (!result || !result.L || !result.U) {
+                resultDiv.innerHTML = 'LU 分解失败或结果无效。';
+                return;
+            }
+            resultDiv.appendChild(displayMatrix(result.L, "L 矩阵"));
+            resultDiv.appendChild(displayMatrix(result.U, "U 矩阵"));
+        }
+
+        // 显示矩阵
+        function displayMatrix(matrix, title = '') {
+            const matrixDisplay = document.createElement('div');
+            matrixDisplay.className = 'matrix-display';
+            matrixDisplay.style.gridTemplateColumns = `repeat(${matrix[0].length}, 50px)`; // 确保显示时列间隔一致
+
+            if (title) {
+                const titleDiv = document.createElement('div');
+                titleDiv.textContent = title;
+                titleDiv.style.gridColumn = `span ${matrix[0].length}`;
+                matrixDisplay.appendChild(titleDiv);
+            }
+
+            for (let i = 0; i < matrix.length; i++) {
+                for (let j = 0; j < matrix[i].length; j++) {
+                    const cell = document.createElement('div');
+                    const value = matrix[i][j];
+                    cell.textContent = (value && typeof value === 'object' && 'toFraction' in value) 
+                        ? value.toFraction() 
+                        : value; // 直接显示普通值
+                    matrixDisplay.appendChild(cell);
+                }
+            }
+
+            return matrixDisplay;
+        }
+
+        // 获取矩阵数据
+        function getMatrix(matrixId) {
+            const matrix = [];
+            const inputs = document.querySelectorAll(`#${matrixId} input`);
+            const rows = matrixId === 'matrixA-input' ? rowsA : rowsB;
+            const cols = matrixId === 'matrixA-input' ? colsA : colsB;
+
+            for (let i = 0; i < rows; i++) {
+                const row = [];
+                for (let j = 0; j < cols; j++) {
+                    const input = document.querySelector(`#${matrixId} input[data-row="${i}"][data-col="${j}"]`);
+                    const value = input.value.trim();
+                    const fractionValue = parseFraction(value);
+                    row.push(fractionValue || 0);
+                }
+                matrix.push(row);
+            }
+            console.log(`Matrix ${matrixId}:`, matrix);
+            return matrix;
+        }
+
+        // 选择功能，动态调整矩阵 B 的显示
+        function selectFunction(op) {
+            operation = op;
+            const matrixBContainer = document.getElementById('matrixB-container');
+            const constantInput = document.getElementById('constant-input');
+
+            // 获取所有按钮
+            const buttons = document.querySelectorAll('.sidebar ul li button');
+            
+            // 移除其他按钮的 active 类，并为当前点击的按钮添加 active 类
+            buttons.forEach(button => {
+                button.classList.remove('active');
+                if (button.getAttribute('onclick').includes(op)) {
+                    button.classList.add('active');
+                }
+            });
+
+            // 判断是否需要显示矩阵 B
+            if (['add', 'subtract', 'multiply','solve_AX_B','solve_XA_B'].includes(op)) {
+                matrixBContainer.style.display = 'block';
+            } else {
+                matrixBContainer.style.display = 'none';
+            }
+
+            // 判断是否需要显示常数输入框
+            if (['scalar', 'power'].includes(op)) {
+                constantInput.style.display = 'block';
+            } else {
+                constantInput.style.display = 'none';
+            }
+
+            // 重新初始化输入区域
+            initMatrixInputs('A');
+            initMatrixInputs('B');
+        }
+
+        // 初始化页面
+        initMatrixInputs('A');
+        initMatrixInputs('B');
+    </script>
+
+</body>
+</html>
