@@ -281,6 +281,19 @@
                     const input = document.createElement('input');
                     input.type = 'text';
                     input.value = (matrix[i][j] instanceof Fraction) ? matrix[i][j].toFraction() : matrix[i][j];// 不设置初始 value，这样输入框保持空白
+                    // 输入框被点击时，如果值为 0 则清空
+                  input.addEventListener('focus', function () {
+                   if (input.value === '0') {
+                    input.value = ''; // 点击时清空默认值 0
+                }
+            });
+
+                 // 输入框失去焦点时，如果值为空则设置为 0
+                input.addEventListener('blur', function () {
+                if (input.value.trim() === '') {
+                    input.value = '0'; // 失焦时如果为空则恢复为 0
+                }
+            });
                     input.setAttribute('data-row', i);
                     input.setAttribute('data-col', j);
                     input.addEventListener('input', function () {
@@ -560,11 +573,15 @@
         function checkDimensions(A, B) {
             if (A.length !== B.length || A.some((row, i) => row.length !== B[i].length)) {
                 //throw new Error('矩阵 A 和矩阵 B 的维度不匹配，无法进行运算。');
-                return { result: null, process: '矩阵 A 和矩阵 B 的维度不匹配，无法进行运算!' };
+                return false;
             }
+            return true;
         }
+        
         function matrixAdd(A, B) {
-            checkDimensions(A,B);
+            if (!checkDimensions(A,B)) {
+                return { result: null, process: '矩阵 A 和矩阵 B 的维度不匹配，无法进行运算!' };
+            };
 
             const result = [];
             let process = '计算矩阵加法的过程:\n'; // 初始化过程描述
@@ -574,7 +591,7 @@
                     //const sum = A[i][j] + B[i][j];
                     const sum = new Fraction(A[i][j]).add(new Fraction(B[i][j])).toFraction();
                     row.push(sum);
-                    process += `A[${i}][${j}] (${A[i][j]}) + B[${i}][${j}] (${B[i][j]}) = ${sum}\n`;
+                    process += `A[${i}][${j}] (${A[i][j].toFraction()}) + B[${i}][${j}] (${B[i][j].toFraction()}) = ${sum}\n`;
                 }
                 result.push(row);
             }
@@ -583,7 +600,9 @@
         }
 
         function matrixSubtract(A, B) {
-            checkDimensions(A,B);
+            if (!checkDimensions(A,B)) {
+                return { result: null, process: '矩阵 A 和矩阵 B 的维度不匹配，无法进行运算!' };
+            };
 
             const result = [];
             let process = '计算矩阵减法的过程:\n'; // 初始化过程描述
@@ -593,7 +612,7 @@
                     //const diff = A[i][j] - B[i][j];
                     const diff = new Fraction(A[i][j]).sub(new Fraction(B[i][j])).toFraction();
                     row.push(diff);
-                    process += `A[${i}][${j}] (${A[i][j]}) - B[${i}][${j}] (${B[i][j]}) = ${diff}\n`;
+                    process += `A[${i}][${j}] (${A[i][j].toFraction()}) - B[${i}][${j}] (${B[i][j].toFraction()}) = ${diff}\n`;
                 }
                 result.push(row);
             }
@@ -685,7 +704,7 @@
                 const row = [];
                 for (let j = 0; j < A.length; j++) {
                     row.push(A[j][i]);
-                    process += `A[${j}][${i}] (${A[j][i]})\n`;
+                    process += `A[${j}][${i}] (${A[j][i].toFraction()})\n`;
                 }
                 result.push(row);
             }
@@ -708,7 +727,7 @@
             }
 
             const { result: adjugateMatrix, process: adjugateProcess } = matrixAdjugate(A);
-            process += `伴随矩阵 adj(A):\n${adjugateMatrix.map(row => row.join('\t')).join('\n')}\n${adjugateProcess}\n`;
+            process += `伴随矩阵 adj(A):\n${adjugateMatrix.map(row => row.map(value => value.toFraction()).join('\t')).join('\n')}\n${adjugateProcess}\n`;
 
             const n = A.length;
             const inverse = Array.from({ length: n }, () => Array(n).fill(0));
@@ -731,33 +750,49 @@
 
         function matrixDeterminant(A) {
             const n = A.length;
-
+            // 确保输入是方阵
             if (n === 0 || A.some(row => row.length !== n)) {
-                return { result: null, process: '行列式仅适用于方阵！'}
+                return { result: null, process: '行列式仅适用于方阵！' };
             }
 
-            if (n === 1) return { result: A[0][0], process: `行列式: ${A[0][0]}` };
-
-            if (n === 2) {
-                const det2x2 = new Fraction(A[0][0]).mul(new Fraction(A[1][1])).sub(new Fraction(A[0][1]).mul(new Fraction(A[1][0])));
-                const process2x2 = `2x2矩阵行列式:\n${A[0][0]} * ${A[1][1]} - ${A[0][1]} * ${A[1][0]} = ${det2x2}\n`;
-                return { result: det2x2, process: process2x2 };
-            }
-
-            let determinant = new Fraction(0);
-            let process = `计算行列式的过程:\n`;
+            let mat = A.map(row => row.map(value => new Fraction(value))); // 确保矩阵中的元素为 Fraction 对象
+            let process = `初始矩阵:\n${mat.map(r => r.map(val => val.toFraction()).join('\t')).join('\n')}\n\n`;
+            
             for (let col = 0; col < n; col++) {
-                const minor = A.slice(1).map(row => row.filter((_, j) => j !== col)); // 子矩阵
-                const cofactorResult = matrixDeterminant(minor); // 递归计算子矩阵的行列式
-
-                const cofactor = new Fraction(A[0][col]).mul(cofactorResult.result);
-                determinant = (col % 2 === 0 ? determinant.add(cofactor) : determinant.sub(cofactor));
-
-                process += `Cofactor(${col + 1}): A[0][${col}](${A[0][col]}) * 子矩阵行列式(${cofactorResult.result.toFraction()}) = ${cofactor.toFraction()}, 累积结果: ${determinant.toFraction()}\n`;
-                process += cofactorResult.process + '\n'; // 递归过程追加
+                // 找到当前列的主元素
+                let pivotRow = -1;
+                for (let row = col; row < n; row++) {
+                    if (!mat[row][col].equals(0)) {
+                        pivotRow = row;
+                        break;
+                    }
+                }
+                // 如果没有找到主元素，说明行列式为零
+                if (pivotRow === -1) {
+                    process += `第 ${col + 1} 列全为零，无法找到合适的主元素，行列式为零。\n`;
+                    return { result: new Fraction(0), process };
+                }
+                // 交换行以将主元素移到当前行
+                if (pivotRow !== col) {
+                    [mat[col], mat[pivotRow]] = [mat[pivotRow], mat[col]];
+                    determinant = determinant.negate(); // 行交换会改变行列式的符号
+                    process += `交换第 ${col + 1} 行和第 ${pivotRow + 1} 行:\n${mat.map(r => r.map(val => val.toFraction()).join('\t')).join('\n')}\n\n`;
+                }
+                // 进行消元
+                for (let row = col + 1; row < n; row++) {
+                    if (!mat[row][col].equals(0)) {
+                        const ratio = mat[row][col].div(mat[col][col]); // 计算比率
+                        for (let j = col; j < n; j++) {
+                            mat[row][j] = mat[row][j].sub(ratio.mul(mat[col][j])); // 行减法
+                        }
+                        process += `将第 ${row + 1} 行减去第 ${col + 1} 行的倍数:\n${mat.map(r => r.map(val => val.toFraction()).join('\t')).join('\n')}\n\n`;
+                    }
+                }
             }
-
-            return { result: determinant, process: `行列式: ${determinant.toFraction()}\n` + process };
+            const diagonalElements = mat.map((row, index) => row[index].toFraction());
+            let determinant = diagonalElements.reduce((prod, val) => prod.mul(val), new Fraction(1));
+            process += `行列式: Det(A) = ${diagonalElements.join(' * ')} = ${determinant.toFraction()}\n`;
+            return { result: determinant.toFraction(), process };
         }
 
         function matrixAdjugate(A) {
@@ -769,13 +804,13 @@
                 for (let j = 0; j < n; j++) {
                     const subMatrix = A
                         .filter((_, row) => row !== i) // 删除第 i 行
-                        .map(row => row.filter((_, col) => col !== j)); // 删除第 j 列
+                        .map(row => row.filter((_, col) => col !== j).map(value => new Fraction(value))); // 删除第 j 列
 
                     const { result: cofactorDet, process: cofactorProcess } = matrixDeterminant(subMatrix);
                     adjugate[j][i] = new Fraction(((i + j) % 2 === 0 ? 1 : -1)).mul(new Fraction(cofactorDet)); // 代数余子式
 
-                    process += `余子式 A[${i}][${j}] 的行列式: ${cofactorDet}\n`;
-                    process += `子矩阵:\n${subMatrix.map(row => row.join('\t')).join('\n')}\n${cofactorProcess}\n`;
+                    process += `余子式 A[${i}][${j}] 的行列式: ${cofactorDet.toFraction()}\n`;
+                    process += `子矩阵:\n${subMatrix.map(row => row.map(value => value.toFraction()).join('\t')).join('\n')}\n${cofactorProcess}\n`;
                 }
             }
 
@@ -788,47 +823,44 @@
             let mat = A.map(row => row.map(value => new Fraction(value))); // 确保矩阵中的元素为 Fraction 对象
             let rank = 0;
             let process = '计算矩阵的秩:\n';
+            let row = 0; // 行索引从0开始
 
-            // 逐行处理
-            for (let row = 0; row < rows; row++) {
-                // 找到当前行的主元素（对角线上的元素）
-                let pivotFound = false;
-
-                if (!mat[row][row].equals(0)) {
-                    pivotFound = true;
-                } else {
-                    // 如果当前行的主元素为 0，尝试与下面的行交换，直到找到非零主元素
-                    for (let i = row + 1; i < rows; i++) {
-                        if (!mat[i][row].equals(0)) {
-                            [mat[row], mat[i]] = [mat[i], mat[row]]; // 行交换
-                            process += `交换第 ${row + 1} 行和第 ${i + 1} 行:\n${mat.map(r => r.map(val => val.toFraction()).join('\t')).join('\n')}\n`;
-                            pivotFound = true;
-                            break;
-                        }
+            // 遍历列
+            for (let col = 0; col < cols && row < rows; col++) {
+                let pivotRow = -1;
+                // 在当前列中找到非零主元素
+                for (let i = row; i < rows; i++) {
+                    if (!mat[i][col].equals(0)) {
+                        pivotRow = i;
+                        break;
                     }
                 }
-
-                // 如果找到了有效的主元素
-                if (pivotFound) {
-                    rank++; // 每找到一个非零主元素，秩加一
-
-                    // 将主元素下方的所有元素消为 0
-                    for (let i = row + 1; i < rows; i++) {
-                        if (!mat[i][row].equals(0)) {
-                            const ratio = mat[i][row].div(mat[row][row]); // 计算比率
-                            for (let j = row; j < cols; j++) {
-                                mat[i][j] = mat[i][j].sub(ratio.mul(mat[row][j])); // 行减法
-                            }
-                            process += `消元: 将第 ${i + 1} 行减去第 ${row + 1} 行的倍数\n`;
-                            process += `消元后:\n${mat.map(r => r.map(val => val.toFraction()).join('\t')).join('\n')}\n`;
-                        }
-                    }
-                } else {
-                    // 如果主元素为 0 且没有行交换成功，则跳过该行
-                    process += `跳过第 ${row + 1} 行，无法找到非零主元素。\n`;
+                if (pivotRow === -1) {
+                    // 如果当前列没有找到非零主元素，跳过该列
+                    process += `跳过第 ${col + 1} 列，所有元素为零。\n`;
+                    continue;
                 }
+                // 交换行，将非零主元素移到当前处理的行
+                if (pivotRow !== row) {
+                    [mat[row], mat[pivotRow]] = [mat[pivotRow], mat[row]];
+                    process += `交换第 ${row + 1} 行和第 ${pivotRow + 1} 行:\n${mat.map(r => r.map(val => val.toFraction()).join('\t')).join('\n')}\n`;
+                }
+                // 每找到一个非零主元素，秩加一
+                rank++;
+                // 将主元素下方的所有元素消为 0
+                for (let i = row + 1; i < rows; i++) {
+                    if (!mat[i][col].equals(0)) {
+                        const ratio = mat[i][col].div(mat[row][col]); // 计算比率
+                        for (let j = col; j < cols; j++) {
+                            mat[i][j] = mat[i][j].sub(ratio.mul(mat[row][j])); // 行减法
+                        }
+                        process += `消元: 将第 ${i + 1} 行减去第 ${row + 1} 行的倍数\n`;
+                        process += `消元后:\n${mat.map(r => r.map(val => val.toFraction()).join('\t')).join('\n')}\n`;
+                    }
+                }
+                // 处理完当前行后，进入下一行
+                row++;
             }
-
             process += `最终矩阵:\n${mat.map(r => r.map(val => val.toFraction()).join('\t')).join('\n')}\n`;
             return { result: rank, process };
         }
@@ -842,7 +874,7 @@
             }
 
             const L = Array.from({ length: n }, () => Array(n).fill(0));
-            const U = A.map(row => row.map(value => new Fraction(value))); // 使用 Fraction 处理
+            const U = A.map(row => row.map(value => new Fraction(value)));
             let process = 'LU分解过程:\n';
 
             for (let i = 0; i < n; i++) {
@@ -869,9 +901,9 @@
                         }
                     }
 
-                    const factor = U[j][i].div(pivot); // 使用 Fraction 进行除法
+                    const factor = U[j][i].div(pivot); 
                     for (let k = 0; k < n; k++) {
-                        U[j][k] = U[j][k].sub(factor.mul(U[i][k])); // 使用 Fraction 进行乘法和减法
+                        U[j][k] = U[j][k].sub(factor.mul(U[i][k])); 
                     }
                     L[j][i] = factor; // 设置 L 的相应值
                     process += `L[${j}][${i}] = ${factor.toFraction()}\n`;
@@ -894,7 +926,7 @@
                 for (let j = 0; j < A[i].length; j++) {
                     const product = new Fraction(A[i][j]).mul(scalarFraction);
                     row.push(product.toFraction());
-                    process += `A[${i}][${j}] (${A[i][j]}) * ${scalar} = ${product.toFraction()}\n`;
+                    process += `A[${i}][${j}] (${A[i][j].toFraction()}) * ${scalar} = ${product.toFraction()}\n`;
                 }
                 result.push(row);
             }
@@ -969,7 +1001,7 @@
         function displayMatrix(matrix, title = '') {
             const matrixDisplay = document.createElement('div');
             matrixDisplay.className = 'matrix-display';
-            matrixDisplay.style.gridTemplateColumns = `repeat(${matrix[0].length}, 50px)`; // 确保显示时列间隔一致
+            matrixDisplay.style.gridTemplateColumns = `repeat(${matrix[0].length}, 100px)`; // 确保显示时列间隔一致
 
             if (title) {
                 const titleDiv = document.createElement('div');
